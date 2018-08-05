@@ -79,18 +79,18 @@
 
 
 
-<meta name="description" content="##为什么要类型化通知？在重构工程的时候，发现工程中使用Notification API的地方非常多，notification的使用充满了各种硬编码，例： 1234extension Notification.Name &amp;#123;    static let test = Notification.Name.init(&quot;com.typedNotification.test&quot;)&amp;#125;Noti">
+<meta name="description" content="为什么要类型化通知？在重构工程的时候，发现工程中使用Notification API的地方非常多，notification的使用充满了各种硬编码，例： 1234extension Notification.Name &amp;#123;    static let test = Notification.Name.init(&quot;com.typedNotification.test&quot;)&amp;#125;Notifi">
 <meta name="keywords" content="ios | swift | functional">
 <meta property="og:type" content="article">
 <meta property="og:title" content="swift类型化通知">
 <meta property="og:url" content="https://lovellx.github.io/2018/08/02/TypedNotification/index.html">
 <meta property="og:site_name" content="lovellx">
-<meta property="og:description" content="##为什么要类型化通知？在重构工程的时候，发现工程中使用Notification API的地方非常多，notification的使用充满了各种硬编码，例： 1234extension Notification.Name &amp;#123;    static let test = Notification.Name.init(&quot;com.typedNotification.test&quot;)&amp;#125;Noti">
+<meta property="og:description" content="为什么要类型化通知？在重构工程的时候，发现工程中使用Notification API的地方非常多，notification的使用充满了各种硬编码，例： 1234extension Notification.Name &amp;#123;    static let test = Notification.Name.init(&quot;com.typedNotification.test&quot;)&amp;#125;Notifi">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2018-08-05T04:00:50.248Z">
+<meta property="og:updated_time" content="2018-08-05T04:27:19.540Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="swift类型化通知">
-<meta name="twitter:description" content="##为什么要类型化通知？在重构工程的时候，发现工程中使用Notification API的地方非常多，notification的使用充满了各种硬编码，例： 1234extension Notification.Name &amp;#123;    static let test = Notification.Name.init(&quot;com.typedNotification.test&quot;)&amp;#125;Noti">
+<meta name="twitter:description" content="为什么要类型化通知？在重构工程的时候，发现工程中使用Notification API的地方非常多，notification的使用充满了各种硬编码，例： 1234extension Notification.Name &amp;#123;    static let test = Notification.Name.init(&quot;com.typedNotification.test&quot;)&amp;#125;Notifi">
 
 
 
@@ -321,15 +321,14 @@
       
 
       
-        <p>##为什么要类型化通知？<br>在重构工程的时候，发现工程中使用<a href="https://developer.apple.com/documentation/foundation/notificationcenter" target="_blank" rel="noopener">Notification API</a>的地方非常多，notification的使用充满了各种硬编码，例：</p>
+        <h2 id="为什么要类型化通知？"><a href="#为什么要类型化通知？" class="headerlink" title="为什么要类型化通知？"></a>为什么要类型化通知？</h2><p>在重构工程的时候，发现工程中使用<a href="https://developer.apple.com/documentation/foundation/notificationcenter" target="_blank" rel="noopener">Notification API</a>的地方非常多，notification的使用充满了各种硬编码，例：</p>
 <figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">extension</span> <span class="title">Notification</span>.<span class="title">Name</span> </span>&#123;</span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">let</span> test = <span class="type">Notification</span>.<span class="type">Name</span>.<span class="keyword">init</span>(<span class="string">"com.typedNotification.test"</span>)</span><br><span class="line">&#125;</span><br><span class="line"><span class="type">NotificationCenter</span>.<span class="keyword">default</span>.post(name: .test, object: <span class="literal">nil</span>, userInfo: [<span class="string">"passedNum"</span>: <span class="number">1</span>, <span class="string">"passedString"</span>: <span class="string">"it is boring"</span>])</span><br></pre></td></tr></table></figure>
 <p>在一个通知中，可能会携带object或userInfo，在接收端的代码：</p>
 <figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">notiToken = <span class="type">NotificationCenter</span>.<span class="keyword">default</span>.addObserver(forName: .test, object: <span class="literal">nil</span>, queue: <span class="literal">nil</span>) &#123; (noti) <span class="keyword">in</span></span><br><span class="line">    <span class="keyword">guard</span> <span class="keyword">let</span> num = noti.userInfo?[<span class="string">"passed"</span>] <span class="keyword">as</span>? <span class="type">Int</span>, <span class="keyword">let</span> str = noti.userInfo?[<span class="string">"passedString"</span>] <span class="keyword">as</span>? <span class="type">String</span> <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">return</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">"<span class="subst">\(num)</span> <span class="subst">\(str)</span>"</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>同时还需要在通知不用的时候remove</p>
 <figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">NotificationCenter</span>.<span class="keyword">default</span>.removeObserver(notiToken)</span><br></pre></td></tr></table></figure>
 <p>这样会导致每当我们需要post和接收test通知的时候，都需要写上面那样的代码。假如需要修改“passed”的类型或者增加一个传递的参数，那就需要找到每一处发送和接收test通知的地方进行修改，这样维护起来就非常艰难了，所以需要改写这些通知的使用方式。</p>
-<p>##如何类型化通知？</p>
-<ul>
+<h2 id="如何类型化通知？"><a href="#如何类型化通知？" class="headerlink" title="如何类型化通知？"></a>如何类型化通知？</h2><ul>
 <li>首先定义一个通知发送描述协议</li>
 </ul>
 <figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">protocol</span> <span class="title">NotificationDescriptor</span> </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> name: <span class="type">Notification</span>.<span class="type">Name</span> &#123; <span class="keyword">get</span> &#125;</span><br><span class="line">    <span class="keyword">var</span> userInfo:[<span class="type">AnyHashable</span>: <span class="type">Any</span>]? &#123; <span class="keyword">get</span> &#125;</span><br><span class="line">    <span class="keyword">var</span> object: <span class="type">Any</span>? &#123; <span class="keyword">get</span> &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">extension</span> <span class="title">NotificationDescriptor</span> </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> userInfo:[<span class="type">AnyHashable</span>: <span class="type">Any</span>]? &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">var</span> object: <span class="type">Any</span>? &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">extension</span> <span class="title">NotificationDescriptor</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">func</span> <span class="title">post</span><span class="params">(on center: NotificationCenter = NotificationCenter.<span class="keyword">default</span>)</span></span> &#123;</span><br><span class="line">        center.post(name: name, object: object, userInfo: userInfo)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -353,7 +352,7 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">notiToken = TestNotificaiton.observer(for: .test) &#123; (testObj) in</span><br><span class="line">    print(&quot;\(testObj.num) \(testObj.str)&quot;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>notiToken类似于NSKeyValueObservation, 并不需要手动去移除通知，管理notiToken的生命周期就可以了。</p>
 <p>通过类型化通知，把通知的发送的描述和接收的解析处理写在一起，有利于后期的持续维护，具体实现我单独拿出来放到了<a href="https://github.com/lovellx/TypedNotification" target="_blank" rel="noopener">这个repo中</a>, 有兴趣的可以去看看。</p>
-<p>##注意<br>通知在MVC中是一个非常重要的机制。但是使用通知需要谨慎，如果过度使用通知，对象之间会产生各种错综复杂的依赖，非常不利于工程的拆分。</p>
+<h2 id="注意"><a href="#注意" class="headerlink" title="注意"></a>注意</h2><p>通知在MVC中是一个非常重要的机制。但是使用通知需要谨慎，如果过度使用通知，对象之间会产生各种错综复杂的依赖，非常不利于工程的拆分。</p>
 
       
     </div>
@@ -402,8 +401,7 @@
   
     <div class="comments" id="comments">
       
-        <div onclick="showGitment()" id="gitment-display-button">Show comments from Gitment</div>
-        <div id="gitment-container" style="display:none"></div>
+        <div id="gitment-container"></div>
       
     </div>
 
@@ -430,8 +428,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
 
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -473,6 +480,22 @@
         </div>
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么要类型化通知？"><span class="nav-number">1.</span> <span class="nav-text">为什么要类型化通知？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#如何类型化通知？"><span class="nav-number">2.</span> <span class="nav-text">如何类型化通知？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#注意"><span class="nav-number">3.</span> <span class="nav-text">注意</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
@@ -683,11 +706,7 @@
       }
 
       
-      function showGitment(){
-        document.getElementById("gitment-display-button").style.display = "none";
-        document.getElementById("gitment-container").style.display = "block";
-        renderGitment();
-      }
+      renderGitment();
       
       </script>
     
